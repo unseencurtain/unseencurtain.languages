@@ -1,0 +1,122 @@
+# unseencurtain.languages — CJK Input Method Switcher for Omarchy
+
+A self-contained Omarchy bar plugin that switches the fcitx5 input method
+between **English**, **Japanese** (Mozc), **Chinese** (Pinyin), and **Korean**
+(Hangul) from a dropdown on the bar.
+
+## Features
+
+- One-click switching between `EN`, `あ` (Japanese), `中` (Chinese), and
+  `한` (Korean) from the bar dropdown.
+- **`Alt+U`** — toggle Japanese hiragana ↔ full-width katakana mode. The bar
+  label shows `あ` / `ア`; the mode is synced across all monitor bars.
+- **`Alt+I`** — jump back to the previously used input method, English
+  included: from English it returns to the last CJK IM, from a CJK IM it
+  returns to English, and between two CJK IMs it alternates.
+- Glassy **Tokyo Night candidate popup** that matches a dark terminal theme
+  (`#1a1b26` translucent background with a `#7aa2f7` accent border).
+- Shared input state across all windows — switching windows never silently
+  changes your language.
+
+## Requirements
+
+- **Arch Linux** with **Hyprland** (current release, Lua config API) and
+  **Omarchy** installed.
+- The fcitx5 base packages (`fcitx5`, `fcitx5-gtk`, `fcitx5-qt`) — these ship
+  with Omarchy and are *not* installed by this project.
+- The installer uses `sudo`/`pkexec` to run `pacman` for the CJK input
+  packages.
+
+## Install
+
+```bash
+bash unseencurtain.languages/install.sh
+```
+
+(Or copy the folder anywhere you like and run its `install.sh`.)
+
+The installer is idempotent and does everything:
+
+1. Installs `fcitx5-mozc`, `fcitx5-chinese-addons`, `fcitx5-hangul`, and
+   `wtype` if they are missing.
+2. Configures fcitx5: English as the safe default, one shared input state
+   across all windows, US layout with Caps as Escape.
+3. Deploys the Tokyo Night theme and the glassy blur for the candidate popup.
+4. Adds the `Alt+U` and `Alt+I` hotkeys to `~/.config/hypr/bindings.lua`.
+5. Installs and enables the plugin in the Omarchy bar and restarts the shell.
+6. Verifies that every language actually switches.
+
+## Usage
+
+- **Switch language** — click the language item on the right side of the bar
+  and pick `EN`, `あ`, `中`, or `한`.
+- **`Alt+U`** (only with Japanese active) — toggles persistent katakana mode.
+  While active, everything you type comes out in full-width katakana
+  (e.g. `sushi` → スシ). Press again to return to hiragana.
+- **`Alt+I`** — switches back to the previous input method (see above).
+
+### Per-language tips
+
+- **Japanese (Mozc):** `F6` converts the word being composed to hiragana,
+  `F7` to full-width katakana, `F8` to half-width katakana. `Alt+U` is a
+  persistent mode that applies to everything you type afterward.
+- **Korean (Hangul):** Hanja conversion is disabled by default. To enable it,
+  set `HanjaMode=True` in `~/.config/fcitx5/conf/hangul.conf`.
+- **Chinese (Pinyin):** simplified/traditional and full/half-width punctuation
+  are config-level fcitx5 options.
+
+### Notes
+
+- The candidate popup only appears while you are composing a word (1–2 letters
+  in) and closes when it commits — that is normal IME behavior.
+- Language switches apply ~200 ms after the dropdown closes, so they always
+  hit the app you are about to type in.
+
+## Uninstall
+
+```bash
+bash unseencurtain.languages/remove.sh
+```
+
+`remove.sh` removes every system trace:
+
+- deletes the plugin from `~/.config/omarchy/plugins/` and its bar entry
+- strips the `Alt+U` and `Alt+I` hotkeys and the popup blur block from Hyprland
+- removes the Tokyo Night fcitx5 theme and classic UI config
+- resets the fcitx5 profile to English-only and removes the plugin's fcitx5
+  configs
+- removes the `fcitx5-mozc`, `fcitx5-chinese-addons`, and `fcitx5-hangul`
+  packages (and unused dependencies)
+
+It intentionally leaves the `unseencurtain.languages` folder itself and `wtype`
+installed. It does **not** remove the fcitx5 base packages that Omarchy
+provides.
+
+## What this project changes on your system
+
+| File | Change | On uninstall |
+| --- | --- | --- |
+| `~/.config/omarchy/plugins/unseencurtain.languages/` | Installed plugin copy | Deleted |
+| `~/.config/omarchy/shell.json` | Adds `unseencurtain.languages` to the right bar | Entry removed |
+| `~/.config/fcitx5/profile` | IM list: us, mozc, pinyin, hangul | Reset to English-only |
+| `~/.config/fcitx5/config` | `ShareInputState=All`, `ActiveByDefault=False` | Deleted |
+| `~/.config/fcitx5/conf/classicui.conf` | Tokyo Night theme + fonts | Deleted |
+| `~/.local/share/fcitx5/themes/tokyonight/` | Candidate popup theme | Deleted |
+| `~/.config/hypr/bindings.lua` | Appends `Alt+U` and `Alt+I` binds | Lines removed |
+| `~/.config/hypr/looknfeel.lua` | Appends `decoration.blur.input_methods` for the popup | Block removed |
+| `~/.config/hypr/input.lua` | `kb_layout = "us"`, `caps:escape` | Rewritten to the same |
+
+## Troubleshooting
+
+- **The hotkeys do nothing.** `Alt+U` only acts when Japanese is the active
+  input method; `Alt+I` is a no-op until you have used at least two different
+  input methods. Press them while a real window is focused (not the bar).
+- **Language changes when switching windows.** Delete `~/.config/fcitx5/config`
+  to restore fcitx5's default per-window behavior.
+- **The popup is not blurred.** The glass effect needs
+  `decoration:blur:enabled = true` in your Hyprland config; the Tokyo Night
+  colors still apply without it.
+
+## License
+
+MIT — use, modify, and share freely.

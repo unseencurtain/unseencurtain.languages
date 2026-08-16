@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "unseencurtain.languages",
+  "name": "Unseencurtain Languages",
+  "version": "1.0.0",
+  "author": "unseencurtain",
+  "description": "Bar dropdown for switching fcitx5 input methods: English, Japanese, Chinese, and Korean.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "CJK Languages",
+    "description": "Switch between English, Japanese, Chinese, and Korean fcitx5 input methods from the bar.",
+    "category": "Input",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}
