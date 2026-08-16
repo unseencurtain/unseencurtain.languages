@@ -44,9 +44,12 @@ The installer is idempotent and does everything:
 2. Configures fcitx5: English as the safe default, one shared input state
    across all windows, US layout with Caps as Escape.
 3. Deploys the Tokyo Night theme and the glassy blur for the candidate popup.
-4. Adds the `Alt+U` and `Alt+I` hotkeys to `~/.config/hypr/bindings.lua`.
-5. Installs and enables the plugin in the Omarchy bar and restarts the shell.
-6. Verifies that every language actually switches.
+4. Patches the Mozc engine's mode label `Full Katakana` → `Katakana`
+   (same-length in-place binary patch, kept in step with a pristine backup;
+   re-run the installer after any `fcitx5-mozc` package upgrade).
+5. Adds the `Alt+U` and `Alt+I` hotkeys to `~/.config/hypr/bindings.lua`.
+6. Installs and enables the plugin in the Omarchy bar and restarts the shell.
+7. Verifies that every language actually switches.
 
 ## Usage
 
@@ -83,6 +86,7 @@ bash unseencurtain.languages/remove.sh
 `remove.sh` removes every system trace:
 
 - deletes the plugin from `~/.config/omarchy/plugins/` and its bar entry
+- restores the original unpatched Mozc engine binary from the backup
 - strips the `Alt+U` and `Alt+I` hotkeys and the popup blur block from Hyprland
 - removes the Tokyo Night fcitx5 theme and classic UI config
 - resets the fcitx5 profile to English-only and removes the plugin's fcitx5
@@ -107,6 +111,8 @@ provides.
 | `~/.config/hypr/bindings.lua` | Appends `Alt+U` and `Alt+I` binds | Lines removed |
 | `~/.config/hypr/looknfeel.lua` | Appends `decoration.blur.input_methods` for the popup | Block removed |
 | `~/.config/hypr/input.lua` | `kb_layout = "us"`, `caps:escape` | Rewritten to the same |
+| `/usr/lib/fcitx5/fcitx5-mozc.so` | Mode label `Full Katakana` → `Katakana` (in-place, same length) | Restored from backup |
+| `~/.local/state/unseencurtain.languages/` | Kana mode, last-IM, and Mozc backup state files | Deleted |
 
 ## Troubleshooting
 
@@ -118,6 +124,9 @@ provides.
 - **The popup is not blurred.** The glass effect needs
   `decoration:blur:enabled = true` in your Hyprland config; the Tokyo Night
   colors still apply without it.
+- **The mode popup says "Full Katakana" again.** A `fcitx5-mozc` package
+  upgrade replaced the patched engine; re-run `install.sh` to re-apply the
+  label patch.
 
 ## License
 

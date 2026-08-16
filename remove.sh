@@ -13,6 +13,9 @@ BINDINGS_LUA="$HOME/.config/hypr/bindings.lua"
 LOOKNFEEL_LUA="$HOME/.config/hypr/looknfeel.lua"
 FCITX_THEME_DIR="$HOME/.local/share/fcitx5/themes/tokyonight"
 CLASSICUI_CONF="$HOME/.config/fcitx5/conf/classicui.conf"
+STATE_DIR="$HOME/.local/state/unseencurtain.languages"
+MOZC_SO="/usr/lib/fcitx5/fcitx5-mozc.so"
+MOZC_BACKUP="$STATE_DIR/fcitx5-mozc.so.orig"
 PACKAGES=(fcitx5-mozc fcitx5-chinese-addons fcitx5-hangul)
 
 log() {
@@ -25,13 +28,32 @@ restart_fcitx5() {
 
 trap restart_fcitx5 EXIT
 
-run_privileged_pacman() {
+run_privileged() {
   if sudo -n true 2>/dev/null; then
-    sudo pacman "$@"
+    sudo "$@"
   elif command -v pkexec >/dev/null 2>&1; then
-    pkexec pacman "$@"
+    pkexec "$@"
   else
-    sudo pacman "$@"
+    sudo "$@"
+  fi
+}
+
+run_privileged_pacman() {
+  run_privileged pacman "$@"
+}
+
+# Undo the install.sh binary patch of mozc's "Full Katakana" label. Only
+# restores when the installed engine is actually patched AND a pristine backup
+# exists — never overwrites a newer packaged binary with an older backup.
+restore_mozc_label() {
+  [[ -f "$MOZC_SO" ]] || return 0
+  if [[ -f "$MOZC_BACKUP" ]] && ! grep -aq 'Full Katakana' "$MOZC_SO"; then
+    run_privileged install -m 755 "$MOZC_BACKUP" "$MOZC_SO"
+    log "Restored original mozc engine (unpatched the 'Katakana' label)"
+  elif grep -aq 'Full Katakana' "$MOZC_SO"; then
+    log "mozc engine label already original"
+  else
+    log "NOTE: mozc engine is patched but no backup exists; removing the fcitx5-mozc package below installs a pristine file"
   fi
 }
 
@@ -186,6 +208,10 @@ Layout=
 [GroupOrder]
 0=Default
 EOF
+
+log "Unpatching mozc 'Full Katakana' label if this install patched it"
+restore_mozc_label
+
 remove_packages
 
 log "Removing fcitx5 config files created for this plugin"
@@ -198,6 +224,9 @@ rm -f "$FCITX_PROFILE".bak.*
 
 log "Removing Tokyo Night fcitx5 theme created for this plugin"
 rm -rf "$FCITX_THEME_DIR"
+
+log "Removing plugin state directory (kana mode, last IM, mozc backup)"
+rm -rf "$STATE_DIR"
 
 restart_fcitx5
 trap - EXIT

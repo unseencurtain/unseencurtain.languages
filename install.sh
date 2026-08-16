@@ -13,6 +13,9 @@ BINDINGS_LUA="$HOME/.config/hypr/bindings.lua"
 LOOKNFEEL_LUA="$HOME/.config/hypr/looknfeel.lua"
 FCITX_THEME_DIR="$HOME/.local/share/fcitx5/themes/tokyonight"
 CLASSICUI_CONF="$HOME/.config/fcitx5/conf/classicui.conf"
+STATE_DIR="$HOME/.local/state/unseencurtain.languages"
+MOZC_SO="/usr/lib/fcitx5/fcitx5-mozc.so"
+MOZC_BACKUP="$STATE_DIR/fcitx5-mozc.so.orig"
 PACKAGES=(fcitx5-mozc fcitx5-chinese-addons fcitx5-hangul wtype)
 KANA_BIND_MARKER="# [unseencurtain.languages] Alt+U toggles Japanese hiragana/katakana mode"
 KANA_BIND='o.bind("ALT + U", "Toggle hiragana/katakana", "omarchy-shell unseencurtain.languages toggleKana")'
@@ -25,14 +28,61 @@ log() {
   printf '[install-sine-languages] %s\n' "$*"
 }
 
-run_privileged_pacman() {
+run_privileged() {
   if sudo -n true 2>/dev/null; then
-    sudo pacman "$@"
+    sudo "$@"
   elif command -v pkexec >/dev/null 2>&1; then
-    pkexec pacman "$@"
+    pkexec "$@"
   else
-    sudo pacman "$@"
+    sudo "$@"
   fi
+}
+
+run_privileged_pacman() {
+  run_privileged pacman "$@"
+}
+
+# mozc's engine hardcodes the composition-mode label "Full Katakana"; patch it
+# in place to just "Katakana" (same byte length, NUL-padded, so no offsets
+# shift). Offset-independent: searches the string, works across package
+# upgrades. Idempotent: skips when the label is already patched. A pristine
+# backup is kept so remove.sh can restore the packaged binary.
+patch_mozc_label() {
+  [[ -f "$MOZC_SO" ]] || { log "fcitx5-mozc engine not found; skipping label patch"; return 0; }
+  local tmp
+  tmp="$(mktemp /tmp/fcitx5-mozc.so.XXXXXX)"
+  cp "$MOZC_SO" "$tmp"
+  if ! grep -aq 'Full Katakana' "$tmp"; then
+    log "mozc label already patched (or upstream string changed); nothing to do"
+    rm -f "$tmp"
+    return 0
+  fi
+  mkdir -p "$STATE_DIR"
+  cp "$tmp" "$MOZC_BACKUP"
+  python3 - "$tmp" <<'PY'
+import sys
+
+path = sys.argv[1]
+with open(path, "rb") as f:
+    data = f.read()
+
+old = b"Full Katakana\x00"
+new = b"Katakana\x00" + b"\x00" * 5
+assert len(old) == len(new)
+patched = data.replace(old, new)
+assert len(patched) == len(data)
+assert old not in patched
+with open(path, "wb") as f:
+    f.write(patched)
+PY
+  run_privileged install -m 755 "$tmp" "$MOZC_SO"
+  rm -f "$tmp"
+  if grep -aq 'Full Katakana' "$MOZC_SO"; then
+    log "ERROR: mozc label patch failed verification"
+    exit 1
+  fi
+  log "Patched mozc mode label 'Full Katakana' -> 'Katakana' (backup: $MOZC_BACKUP)"
+  log "Note: a fcitx5-mozc package upgrade reverts this; re-run install.sh to re-apply"
 }
 
 install_packages() {
@@ -117,6 +167,10 @@ hyprctl reload >/dev/null 2>&1 || true
 
 log "Configuring fcitx5 input methods"
 systemctl --user stop omarchy-fcitx5.service 2>/dev/null || true
+
+log "Patching mozc 'Full Katakana' mode label to 'Katakana'"
+patch_mozc_label
+
 mkdir -p "$(dirname "$FCITX_PROFILE")"
 cat > "$FCITX_PROFILE" <<'EOF'
 [Groups/0]
