@@ -6,8 +6,6 @@ between **English**, **Japanese** (Mozc), **Chinese** (Pinyin), and **Korean**
 
 ![The unseencurtain.languages dropdown on the Omarchy bar](screenshots/screenshot-2026-08-16_11-27-00.png)
 
-<video src="screenshots/demo-2026-08-16.mp4" controls width="720"></video>
-
 ## Features
 
 - One-click switching between `EN`, `あ` (Japanese), `中` (Chinese), and
