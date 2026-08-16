@@ -6,7 +6,7 @@ between **English**, **Japanese** (Mozc), **Chinese** (Pinyin), and **Korean**
 
 ![The unseencurtain.languages dropdown on the Omarchy bar](screenshots/screenshot-2026-08-16_11-27-00.png)
 
-<video src="screenshots/demo-2026-08-16.mp4" controls width="720"></video>
+<video src="https://github.com/unseencurtain/unseencurtain.languages/raw/main/screenshots/demo-2026-08-16.mp4" controls width="720"></video>
 
 ## Features
 
