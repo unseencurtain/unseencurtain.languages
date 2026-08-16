@@ -4,6 +4,8 @@ A self-contained Omarchy bar plugin that switches the fcitx5 input method
 between **English**, **Japanese** (Mozc), **Chinese** (Pinyin), and **Korean**
 (Hangul) from a dropdown on the bar.
 
+![The unseencurtain.languages dropdown on the Omarchy bar](screenshots/screenshot-2026-08-16_11-27-00.png)
+
 ## Features
 
 - One-click switching between `EN`, `あ` (Japanese), `中` (Chinese), and
