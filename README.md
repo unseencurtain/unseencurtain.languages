@@ -15,8 +15,9 @@ between **English**, **Japanese** (Mozc), **Chinese** (Pinyin), and **Korean**
 - **`Alt+I`** — jump back to the previously used input method, English
   included: from English it returns to the last CJK IM, from a CJK IM it
   returns to English, and between two CJK IMs it alternates.
-- Glassy **Tokyo Night candidate popup** that matches a dark terminal theme
-  (`#1a1b26` translucent background with a `#7aa2f7` accent border).
+- A glassy **candidate popup that follows your Omarchy theme** — the kanji/
+  kana/hanzi popup reads its colors from the active theme and recolors
+  automatically on every `omarchy theme set`.
 - Shared input state across all windows — switching windows never silently
   changes your language.
 
@@ -43,7 +44,9 @@ The installer is idempotent and does everything:
    `wtype` if they are missing.
 2. Configures fcitx5: English as the safe default, one shared input state
    across all windows, US layout with Caps as Escape.
-3. Deploys the Tokyo Night theme and the glassy blur for the candidate popup.
+3. Generates the candidate popup theme from your current Omarchy theme and
+   installs a **theme-set hook** so the popup follows every theme change; adds
+   the glassy blur for the popup.
 4. Patches the Mozc engine's mode label `Full Katakana` → `Katakana`
    (same-length in-place binary patch, kept in step with a pristine backup;
    re-run the installer after any `fcitx5-mozc` package upgrade).
@@ -74,6 +77,8 @@ The installer is idempotent and does everything:
 
 - The candidate popup only appears while you are composing a word (1–2 letters
   in) and closes when it commits — that is normal IME behavior.
+- The popup recolors itself to match your active Omarchy theme; switch themes
+  with `omarchy theme set <name>` and it follows automatically.
 - Language switches apply ~200 ms after the dropdown closes, so they always
   hit the app you are about to type in.
 
@@ -88,7 +93,8 @@ bash unseencurtain.languages/remove.sh
 - deletes the plugin from `~/.config/omarchy/plugins/` and its bar entry
 - restores the original unpatched Mozc engine binary from the backup
 - strips the `Alt+U` and `Alt+I` hotkeys and the popup blur block from Hyprland
-- removes the Tokyo Night fcitx5 theme and classic UI config
+- removes the candidate popup theme, its theme-set hook, and the classic UI
+  config
 - resets the fcitx5 profile to English-only and removes the plugin's fcitx5
   configs
 - removes the `fcitx5-mozc`, `fcitx5-chinese-addons`, and `fcitx5-hangul`
@@ -106,8 +112,9 @@ provides.
 | `~/.config/omarchy/shell.json` | Adds `unseencurtain.languages` to the right bar | Entry removed |
 | `~/.config/fcitx5/profile` | IM list: us, mozc, pinyin, hangul | Reset to English-only |
 | `~/.config/fcitx5/config` | `ShareInputState=All`, `ActiveByDefault=False` | Deleted |
-| `~/.config/fcitx5/conf/classicui.conf` | Tokyo Night theme + fonts | Deleted |
-| `~/.local/share/fcitx5/themes/tokyonight/` | Candidate popup theme | Deleted |
+| `~/.config/fcitx5/conf/classicui.conf` | Popup theme (`Theme=active`) + fonts | Deleted |
+| `~/.local/share/fcitx5/themes/active/` | Candidate popup theme, generated from the active Omarchy theme | Deleted |
+| `~/.config/omarchy/hooks/theme-set.d/fcitx-theme-gen.sh` | Re-generates the popup theme on every theme change | Deleted |
 | `~/.config/hypr/bindings.lua` | Appends `Alt+U` and `Alt+I` binds | Lines removed |
 | `~/.config/hypr/looknfeel.lua` | Appends `decoration.blur.input_methods` for the popup | Block removed |
 | `~/.config/hypr/input.lua` | `kb_layout = "us"`, `caps:escape` | Rewritten to the same |
@@ -122,8 +129,8 @@ provides.
 - **Language changes when switching windows.** Delete `~/.config/fcitx5/config`
   to restore fcitx5's default per-window behavior.
 - **The popup is not blurred.** The glass effect needs
-  `decoration:blur:enabled = true` in your Hyprland config; the Tokyo Night
-  colors still apply without it.
+  `decoration:blur:enabled = true` in your Hyprland config; the theme colors
+  still apply without it.
 - **The mode popup says "Full Katakana" again.** A `fcitx5-mozc` package
   upgrade replaced the patched engine; re-run `install.sh` to re-apply the
   label patch.

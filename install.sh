@@ -11,7 +11,7 @@ FCITX_CONFIG="$HOME/.config/fcitx5/config"
 INPUT_LUA="$HOME/.config/hypr/input.lua"
 BINDINGS_LUA="$HOME/.config/hypr/bindings.lua"
 LOOKNFEEL_LUA="$HOME/.config/hypr/looknfeel.lua"
-FCITX_THEME_DIR="$HOME/.local/share/fcitx5/themes/tokyonight"
+FCITX_THEME_DIR="$HOME/.local/share/fcitx5/themes/active"
 CLASSICUI_CONF="$HOME/.config/fcitx5/conf/classicui.conf"
 STATE_DIR="$HOME/.local/state/unseencurtain.languages"
 MOZC_SO="/usr/lib/fcitx5/fcitx5-mozc.so"
@@ -140,10 +140,13 @@ if ! grep -qF "$LAST_BIND" "$BINDINGS_LUA" 2>/dev/null; then
 fi
 hyprctl reload >/dev/null 2>&1 || true
 
-log "Installing Tokyo Night theme for the fcitx5/mozc candidate popup"
-mkdir -p "$FCITX_THEME_DIR" "$(dirname "$CLASSICUI_CONF")"
-cp "$PLUGIN_SRC/themes/tokyonight/theme.conf" "$FCITX_THEME_DIR/theme.conf"
+log "Generating the fcitx5/mozc candidate popup theme from the active Omarchy theme"
+mkdir -p "$(dirname "$CLASSICUI_CONF")"
 cp "$PLUGIN_SRC/classicui.conf" "$CLASSICUI_CONF"
+"$PLUGIN_SRC/fcitx-theme-gen.sh"
+
+log "Installing theme-set hook so the popup follows future theme switches"
+omarchy hook install theme-set "$PLUGIN_SRC/fcitx-theme-gen.sh"
 
 log "Enabling glassy blur for the candidate popup in Hyprland looknfeel"
 mkdir -p "$(dirname "$LOOKNFEEL_LUA")"
