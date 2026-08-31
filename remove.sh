@@ -82,9 +82,9 @@ import sys
 
 path = sys.argv[1]
 markers = [
-    "# [unseencurtain.languages] Alt+U toggles Japanese hiragana/katakana mode",
+    "-- [unseencurtain.languages] Alt+U toggles Japanese hiragana/katakana mode",
     "o.bind(\"ALT + U\", \"Toggle hiragana/katakana\", \"omarchy-shell unseencurtain.languages toggleKana\")",
-    "# [unseencurtain.languages] Alt+I toggles the previous input method",
+    "-- [unseencurtain.languages] Alt+I toggles the previous input method",
     "o.bind(\"ALT + I\", \"Toggle previous input method\", \"omarchy-shell unseencurtain.languages toggleLast\")",
 ]
 with open(path, "r", encoding="utf-8") as f:

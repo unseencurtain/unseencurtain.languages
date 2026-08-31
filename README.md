@@ -32,11 +32,27 @@ between **English**, **Japanese** (Mozc), **Chinese** (Pinyin), and **Korean**
 
 ## Install
 
+### Official Omarchy way (recommended)
+
 ```bash
-bash unseencurtain.languages/install.sh
+omarchy plugin add https://github.com/unseencurtain/unseencurtain.languages.git --enable
 ```
 
-(Or copy the folder anywhere you like and run its `install.sh`.)
+`omarchy plugin add` installs the plugin into `~/.config/omarchy/plugins/unseencurtain.languages/`
+and enables it on the bar. After that, run the bundled setup script to configure fcitx5,
+the theme hook, and the hotkeys:
+
+```bash
+bash ~/.config/omarchy/plugins/unseencurtain.languages/install.sh
+```
+
+### Standalone install
+
+If you prefer not to use `omarchy plugin add`, clone or copy the folder anywhere and run:
+
+```bash
+bash /path/to/unseencurtain.languages/install.sh
+```
 
 The installer is idempotent and does everything:
 
@@ -84,8 +100,22 @@ The installer is idempotent and does everything:
 
 ## Uninstall
 
+### Official Omarchy way
+
 ```bash
-bash unseencurtain.languages/remove.sh
+bash ~/.config/omarchy/plugins/unseencurtain.languages/remove.sh
+omarchy plugin remove unseencurtain.languages --yes
+```
+
+Run `remove.sh` first so it can clean up fcitx5 and Hyprland config while it still has
+access to the bundled scripts.
+
+### Standalone uninstall
+
+If you copied the folder elsewhere, run:
+
+```bash
+bash /path/to/unseencurtain.languages/remove.sh
 ```
 
 `remove.sh` removes every system trace:

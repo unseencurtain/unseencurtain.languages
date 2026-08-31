@@ -17,9 +17,9 @@ STATE_DIR="$HOME/.local/state/unseencurtain.languages"
 MOZC_SO="/usr/lib/fcitx5/fcitx5-mozc.so"
 MOZC_BACKUP="$STATE_DIR/fcitx5-mozc.so.orig"
 PACKAGES=(fcitx5-mozc fcitx5-chinese-addons fcitx5-hangul wtype)
-KANA_BIND_MARKER="# [unseencurtain.languages] Alt+U toggles Japanese hiragana/katakana mode"
+KANA_BIND_MARKER="-- [unseencurtain.languages] Alt+U toggles Japanese hiragana/katakana mode"
 KANA_BIND='o.bind("ALT + U", "Toggle hiragana/katakana", "omarchy-shell unseencurtain.languages toggleKana")'
-LAST_BIND_MARKER="# [unseencurtain.languages] Alt+I toggles the previous input method"
+LAST_BIND_MARKER="-- [unseencurtain.languages] Alt+I toggles the previous input method"
 LAST_BIND='o.bind("ALT + I", "Toggle previous input method", "omarchy-shell unseencurtain.languages toggleLast")'
 GLASSY_MARKER_START="-- [unseencurtain.languages] glassy fcitx5/mozc candidate popup (START)"
 GLASSY_MARKER_END="-- [unseencurtain.languages] glassy fcitx5/mozc candidate popup (END)"
@@ -221,16 +221,34 @@ EOF
 systemctl --user start omarchy-fcitx5.service 2>/dev/null || true
 sleep 2
 
-log "Installing plugin into Omarchy config"
-rm -rf "$PLUGIN_DST"
-mkdir -p "$PLUGIN_DST"
-cp "$PLUGIN_SRC/manifest.json" "$PLUGIN_SRC/Panel.qml" "$PLUGIN_DST/"
+PLUGIN_SRC_REAL="$(cd "$PLUGIN_SRC" && pwd -P)"
+PLUGIN_DST_REAL=""
+if [[ -d "$PLUGIN_DST" ]]; then
+  PLUGIN_DST_REAL="$(cd "$PLUGIN_DST" 2>/dev/null && pwd -P)" || PLUGIN_DST_REAL="$(realpath -m "$PLUGIN_DST")"
+else
+  PLUGIN_DST_REAL="$(realpath -m "$PLUGIN_DST")"
+fi
 
-log "Validating and enabling plugin"
+if [[ "$PLUGIN_SRC_REAL" == "$PLUGIN_DST_REAL" ]]; then
+  log "Plugin already installed in Omarchy config; skipping file copy"
+else
+  log "Installing plugin into Omarchy config"
+  rm -rf "$PLUGIN_DST"
+  mkdir -p "$PLUGIN_DST"
+  cp "$PLUGIN_SRC/manifest.json" "$PLUGIN_SRC/Panel.qml" "$PLUGIN_DST/"
+fi
+
+log "Validating plugin"
 omarchy plugin validate "$PLUGIN_DST"
 omarchy-shell shell rescanPlugins >/dev/null 2>&1 || true
 sleep 1
-omarchy plugin enable "$PLUGIN_ID" right
+
+if omarchy plugin list --json 2>/dev/null | jq -e --arg id "$PLUGIN_ID" 'any(.[]; .id == $id and .enabled)' >/dev/null 2>&1; then
+  log "Plugin already enabled; leaving bar placement unchanged"
+else
+  log "Enabling plugin on the right side of the bar"
+  omarchy plugin enable "$PLUGIN_ID" right
+fi
 
 log "Restarting Omarchy shell"
 omarchy restart shell >/dev/null 2>&1 || true
